@@ -1,20 +1,47 @@
-"""Turns switches on and off on raspberry pi according to time of day."""
+"""Turns switches on and off for raspberry pi according to time of day."""
 
 import datetime
+import time
+import pytz
 from astral import Astral
 
-def on_off():
-    """toggles the switch"""
+# Globals and constants
+a = Astral()
+a.solar_depression = 'astronomical'
+city = a['San Francisco']
+door_status = 'open'
+
+def open_door():
+    #Turn on the Switch
+    GPIO.output(2, GPIO.LOW)
+    #Turn off the switch
+    GPIO.cleanup()
+
+def close_door():
     pass
 
-def timer(city_name):
-    """determines when sunrise and sunset are"""
-    a = Astral()
-    a.solar_depression = 'nautical'
-    city = a[city_name]
-    sun = city.sun()
-    print('Sunrise: %s' % str(sun['sunrise']))
-    print('Sunset:  %s' % str(sun['sunset']))
-    print('Dusk: %s' % str(sun['dusk']))
+def is_day(t, sun):
+    return t > sun['sunrise'] and t < sun['sunset']
 
-timer('San Francisco')
+def main():
+    # check time every 15 min
+    t = datetime.datetime.now(pytz.utc)
+    today = datetime.date.today()
+    sun = city.sun(date=today, local=True)
+
+    # check if door is open or closed
+    # if daylight and door is closed, open door
+    # if daylight and door is open, do nothing
+    if door_status == 'closed' and is_day(t, sun):
+        open_door()
+        door_status = 'open'
+
+    # if night time and door is open, close door
+    # if night and door is closed, do nothing
+    if door_status == 'open' and not is_day(t, sun):
+        close_door()
+        door_status = 'closed'
+
+while True:
+    main()
+    time.sleep(900)
