@@ -10,31 +10,37 @@ from astral import Astral
 a = Astral()
 a.solar_depression = 'astronomical'
 city = a['San Francisco']
-door_status = ['open']
+door_status = 'open'
 door_motor_forwards = 2
 door_motor_backwards = 3
 
-# Setup Rasberrry Pi
+# Setup Raspberry Pi
 GPIO.setmode(GPIO.BCM)
 
 # Functions
 def open_door():
-    #Turn on the switch
+    #Setup the switch
     GPIO.setup(door_motor_forwards, GPIO.OUT)
     GPIO.output(door_motor_forwards, GPIO.HIGH)
-    time.sleep(6)
-    #Turn off the switch
+    time.sleep(2)
+    #Switch activated by low voltage
     GPIO.output(door_motor_forwards, GPIO.LOW)
+    #Let motor run to winch up door
+    time.sleep(6)
     GPIO.cleanup()
+    print('Opened: {:%Y-%m-%d %H:%M:%S %z}'.format(datetime.datetime.now(pytz.utc)))
 
 def close_door():
-    #Turn on the switch
+    #Setup the switch
     GPIO.setup(door_motor_backwards, GPIO.OUT)
     GPIO.output(door_motor_backwards, GPIO.HIGH)
-    time.sleep(6)
-    #Turn off the switch
+    time.sleep(2)
+    #Switch activated by low voltage
     GPIO.output(door_motor_backwards, GPIO.LOW)
+    #Let motor run to winch down door
+    time.sleep(6)
     GPIO.cleanup()
+    print('Closed: {:%Y-%m-%d %H:%M:%S %z}'.format(datetime.datetime.now(pytz.utc)))
 
 def is_day(t, sun):
     return t > sun['sunrise'] and t < sun['sunset']
