@@ -1,4 +1,4 @@
-"""Turns switches on and off for raspberry pi according to time of day."""
+"""Turns relay switches on and off using raspberry pi according to time of day."""
 
 import RPi.GPIO as GPIO
 import datetime
@@ -10,6 +10,7 @@ from astral import Astral
 a = Astral()
 a.solar_depression = 'astronomical'
 city = a['San Francisco']
+pt = pytz.timezone('America/Los_Angeles')
 door_status = 'open'
 door_motor_forwards = 2
 door_motor_backwards = 3
@@ -47,7 +48,7 @@ def is_day(t, sun):
 
 def main():
     # check time every 15 min
-    t = datetime.datetime.now(pytz.utc)
+    t = pt.localize(datetime.datetime.now())
     today = datetime.date.today()
     sun = city.sun(date=today, local=True)
     global door_status
@@ -57,12 +58,14 @@ def main():
     if door_status == 'closed' and is_day(t, sun):
         time.sleep(3600)
         open_door()
+        print('Sunrise: %s' % str(sun['sunrise']))
         door_status = 'open'
 
     # if night time and door is open, close door
     # if night and door is closed, do nothing
     if door_status == 'open' and not is_day(t, sun):
         close_door()
+        print('Sunset:  %s' % str(sun['sunset']))
         door_status = 'closed'
 
 # Keep running every 15 min
